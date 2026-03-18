@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Sword, Package, Star, Users, Filter, Sparkles, TrendingUp, Clock, Shield } from 'lucide-react';
 import Link from 'next/link';
-import { Package, Star, Users, Sparkles, TrendingUp, Clock, Shield } from 'lucide-react';
+import { RazorpayCheckout } from '../../src/components/razorpay/razorpay-checkout';
 
 // Types
 interface BoxTheme {
@@ -28,7 +29,7 @@ const mockBoxes: BoxTheme[] = [
     name: "The Dark Wizard's Desk",
     description: "Mysterious artifacts from a wizard's secret study",
     price: 49.99,
-    imageUrl: 'https://images.unsplash.com/photo-1579532586980-283c242d3a4b?w=400&h=300&fit=crop',
+    imageUrl: 'https://picsum.photos/seed/dark-wizard-desk/400/300.jpg',
     isActive: true,
     isSoldOut: false,
     stats: {
@@ -42,7 +43,7 @@ const mockBoxes: BoxTheme[] = [
     name: "Dragon Lair Hoard",
     description: "Treasures collected from ancient dragon nests",
     price: 79.99,
-    imageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop',
+    imageUrl: 'https://picsum.photos/seed/dragon-lair-hoard/400/300.jpg',
     isActive: true,
     isSoldOut: false,
     stats: {
@@ -56,7 +57,7 @@ const mockBoxes: BoxTheme[] = [
     name: "Enchanted Forest Collection",
     description: "Magical items from mystical woodland realms",
     price: 34.99,
-    imageUrl: 'https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=400&h=300&fit=crop',
+    imageUrl: 'https://picsum.photos/seed/enchanted-forest/400/300.jpg',
     isActive: true,
     isSoldOut: false,
     stats: {
@@ -70,7 +71,7 @@ const mockBoxes: BoxTheme[] = [
     name: "Celestial Vault",
     description: "Rare artifacts from beyond the stars",
     price: 129.99,
-    imageUrl: 'https://images.unsplash.com/photo-1446776653964-20a1d410b9fd?w=400&h=300&fit=crop',
+    imageUrl: 'https://picsum.photos/seed/celestial-vault/400/300.jpg',
     isActive: false,
     isSoldOut: false,
     stats: {

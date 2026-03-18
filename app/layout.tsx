@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import './globals.css';
 import { Cinzel, Inter } from 'next/font/google';
-import { SessionProviderWrapper } from '../components/providers/session-provider';
+import { SessionProviderWrapper } from '../src/components/providers/session-provider';
+import Script from 'next/script';
 
 const cinzel = Cinzel({
   variable: "--font-heading",
@@ -32,6 +33,7 @@ export default function RootLayout({
         <SessionProviderWrapper>
           {children}
         </SessionProviderWrapper>
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
       </body>
     </html>
   );

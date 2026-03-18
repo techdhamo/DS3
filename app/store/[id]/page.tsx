@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Package, Star, Shield, TrendingUp, Users, Zap, Gift, Crown, Gem } from 'lucide-react';
+import { RazorpayCheckout } from '../../../src/components/razorpay/razorpay-checkout';
 
 // Types
 interface BoxItem {
@@ -38,7 +39,9 @@ const rarityConfig = {
   MYTHIC: { color: 'text-pink-400', bgColor: 'bg-pink-900/50', borderColor: 'border-pink-600', icon: Star }
 };
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
+  const boxId = resolvedParams.id;
   const [box, setBox] = useState<BoxTheme | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,11 +51,11 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
   // Mock data for development
   const mockBox: BoxTheme = {
-    id: params.id,
+    id: boxId,
     name: "The Dark Wizard's Desk",
     description: "A mysterious collection of arcane artifacts and dark magical items gathered from a wizard's secret study. Each box contains 3-5 randomly selected items of varying rarity.",
     price: 49.99,
-    imageUrl: 'https://images.unsplash.com/photo-1579532586980-283c242d3a4b?w=800&h=600&fit=crop',
+    imageUrl: 'https://picsum.photos/seed/dark-wizard-desk/800/600.jpg',
     isActive: true,
     isSoldOut: false,
     probabilityDistribution: {
@@ -70,12 +73,27 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   };
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setBox(mockBox);
-      setLoading(false);
-    }, 1000);
-  }, [params.id]);
+    // Simulate API call to fetch box details
+    const fetchBox = async () => {
+      setLoading(true);
+      try {
+        // In a real app, this would be an API call
+        // const response = await fetch(`/api/store/boxes/${params.id}`);
+        // const data = await response.json();
+        
+        // For now, use mock data
+        setTimeout(() => {
+          setBox(mockBox);
+          setLoading(false);
+        }, 1000);
+      } catch (err) {
+        setError('Failed to load box details');
+        setLoading(false);
+      }
+    };
+
+    fetchBox();
+  }, [boxId]);
 
   const handleAddToCart = async () => {
     setIsAddingToCart(true);
@@ -319,27 +337,23 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 </div>
               </div>
 
-              <button
-                onClick={handleAddToCart}
-                disabled={box.isSoldOut || isAddingToCart}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 text-white py-4 rounded-xl font-bold text-lg transition-all transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-              >
-                {isAddingToCart ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
-                    />
-                    Adding to Cart...
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="w-5 h-5" />
-                    {box.isSoldOut ? 'Sold Out' : 'Add to Cart'}
-                  </>
-                )}
-              </button>
+              <RazorpayCheckout
+                items={[{
+                  boxThemeId: box.id,
+                  quantity: quantity,
+                  boxThemeName: box.name,
+                  price: box.price
+                }]}
+                onPaymentSuccess={() => {
+                  console.log('Payment successful!');
+                  // You can redirect to success page or show success message
+                }}
+                onPaymentError={(error) => {
+                  console.error('Payment error:', error);
+                  // Show error message to user
+                }}
+                className="w-full py-4"
+              />
 
               {/* Trust badges */}
               <div className="flex items-center justify-center gap-6 text-sm text-gray-400">

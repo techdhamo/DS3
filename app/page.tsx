@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Sparkles, Package, Users, Sword } from 'lucide-react';
-import { AuthNav } from '../components/navigation/auth-nav';
+import { AuthNav } from '../src/components/navigation/auth-nav';
 import Link from 'next/link';
 
 export default function Home() {
@@ -74,7 +74,7 @@ export default function Home() {
         >
           {/* DS3 World Portal */}
           <motion.a
-            href="/world"
+            href="/store"
             className="group relative w-full md:w-1/2"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -86,16 +86,16 @@ export default function Home() {
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                   className="mb-4"
                 >
-                  <Users className="w-12 h-12 text-neon-purple-400" />
+                  <Package className="w-12 h-12 text-neon-purple-400" />
                 </motion.div>
                 <h2 className="font-heading text-2xl font-bold mb-3 text-neon-purple-300 text-glow">
-                  Enter DS3 World
+                  Mystery Boxes
                 </h2>
                 <p className="text-midnight-300 mb-6">
-                  Join our community, explore the lore, and share your adventures in a realm of endless imagination.
+                  Discover rare artifacts, magical items, and legendary treasures in our exclusive mystery box collections.
                 </p>
                 <div className="flex items-center gap-2 text-neon-purple-400 group-hover:text-neon-purple-300 transition-colors">
-                  <span className="font-semibold">Explore Community</span>
+                  <span className="font-semibold">Browse Store</span>
                   <motion.div
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}

@@ -1,5 +1,6 @@
 'use client';
 
+import { SessionProviderWrapper } from '../../../src/components/providers/session-provider';
 import { useState } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
