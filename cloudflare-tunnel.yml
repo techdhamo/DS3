@@ -1,0 +1,26 @@
+tunnel: f153d377-e4e5-464b-8292-fdc110a95bab
+credentials-file: /etc/cloudflared/cert.json
+
+ingress:
+  # DS3 main site
+  - hostname: ds3.world
+    service: http://app:3000
+  
+  # Mazhai frontend routes (use host.docker.internal for Mac)
+  - hostname: mazhai.org.ds3.world
+    service: http://host.docker.internal:3000
+    originRequest:
+      noTLSVerify: true
+  - hostname: www.mazhai.org.ds3.world
+    service: http://host.docker.internal:3000
+    originRequest:
+      noTLSVerify: true
+  
+  # Mazhai API route (use host.docker.internal for Mac)
+  - hostname: api.mazhai.org.ds3.world
+    service: http://host.docker.internal:8080
+    originRequest:
+      noTLSVerify: true
+  
+  # Catch-all
+  - service: http_status:404

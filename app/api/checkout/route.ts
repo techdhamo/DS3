@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import Razorpay from 'razorpay';
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+// Initialize Razorpay with error handling
+let razorpay: Razorpay | null = null;
+
+try {
+  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+  }
+} catch (error) {
+  console.error('❌ Failed to initialize Razorpay:', error);
+}
 
 // Types
 interface CartItem {
@@ -28,6 +36,14 @@ export async function POST(request: NextRequest): Promise<NextResponse<{ success
       return NextResponse.json(
         { success: false, error: 'Authentication required' },
         { status: 401 }
+      );
+    }
+
+    // Check if Razorpay is configured
+    if (!razorpay) {
+      return NextResponse.json(
+        { success: false, error: 'Payment service not configured' },
+        { status: 503 }
       );
     }
 

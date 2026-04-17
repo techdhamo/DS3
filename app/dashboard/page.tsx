@@ -3,6 +3,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import { 
   Crown, 
   Shield, 
@@ -97,7 +98,6 @@ const rarityConfig = {
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
-  const [userData, setUserData] = useState(mockUserData);
 
   if (status === 'loading') {
     return (
@@ -128,11 +128,15 @@ export default function DashboardPage() {
     );
   }
 
-  const currentRank = guildRankConfig[userData.guildRank];
+  // Use mock data for guild rank until we wire up real database
+  const mockGuildRank = 'NOVICE';
+  const mockLoyaltyPoints = 0;
+  
+  const currentRank = guildRankConfig[mockGuildRank as keyof typeof guildRankConfig];
   const RankIcon = currentRank.icon;
-  const nextRank = Object.values(guildRankConfig).find(rank => rank.requiredPoints > userData.loyaltyPoints);
+  const nextRank = Object.values(guildRankConfig).find(rank => rank.requiredPoints > mockLoyaltyPoints);
   const progressToNext = nextRank ? 
-    ((userData.loyaltyPoints - currentRank.requiredPoints) / (nextRank.requiredPoints - currentRank.requiredPoints)) * 100 : 100;
+    ((mockLoyaltyPoints - currentRank.requiredPoints) / (nextRank.requiredPoints - currentRank.requiredPoints)) * 100 : 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -146,9 +150,22 @@ export default function DashboardPage() {
             </Link>
             
             <div className="flex items-center gap-4">
+              {session?.user?.image ? (
+                <Image
+                  src={session.user.image}
+                  alt="Profile"
+                  width={40}
+                  height={40}
+                  className="rounded-full border-2 border-purple-500/50"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-purple-500/50 flex items-center justify-center text-white font-bold">
+                  {session?.user?.name?.[0]?.toUpperCase() || 'U'}
+                </div>
+              )}
               <div className="text-right">
-                <div className="text-white font-semibold">{userData.username}</div>
-                <div className="text-sm text-gray-400">{userData.email}</div>
+                <div className="text-white font-semibold">{session?.user?.name || 'Player'}</div>
+                <div className="text-sm text-gray-400">{session?.user?.email}</div>
               </div>
               <button
                 onClick={() => signOut()}
@@ -183,19 +200,19 @@ export default function DashboardPage() {
             {/* Stats */}
             <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-400">{userData.loyaltyPoints.toLocaleString()}</div>
+                <div className="text-3xl font-bold text-purple-400">{mockLoyaltyPoints.toLocaleString()}</div>
                 <div className="text-sm text-gray-400">Mana Points</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-400">${userData.totalSpent}</div>
+                <div className="text-3xl font-bold text-purple-400">$0.00</div>
                 <div className="text-sm text-gray-400">Total Spent</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-400">{userData.boxesOpened}</div>
+                <div className="text-3xl font-bold text-purple-400">0</div>
                 <div className="text-sm text-gray-400">Boxes Opened</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-400">{userData.rareItemsWon}</div>
+                <div className="text-3xl font-bold text-purple-400">0</div>
                 <div className="text-sm text-gray-400">Rare Items</div>
               </div>
             </div>
@@ -216,7 +233,7 @@ export default function DashboardPage() {
                   />
                 </div>
                 <div className="text-xs text-gray-400 mt-1">
-                  {userData.loyaltyPoints} / {nextRank.requiredPoints} points
+                  {mockLoyaltyPoints} / {nextRank.requiredPoints} points
                 </div>
               </div>
             )}
@@ -269,25 +286,17 @@ export default function DashboardPage() {
               Digital Inventory
             </h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {userData.inventory.map((item) => (
-                <div key={item.id} className={`p-4 rounded-lg border ${rarityConfig[item.rarityTier].bgColor} ${rarityConfig[item.rarityTier].borderColor}`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className={`font-semibold ${rarityConfig[item.rarityTier].color}`}>
-                        {item.name}
-                      </div>
-                      <div className="text-sm text-gray-400">
-                        {item.rarityTier} • Qty: {item.quantity}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xs text-gray-400">
-                        {item.acquiredAt.toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
+              {mockLoyaltyPoints === 0 ? (
+                <div className="text-center py-8">
+                  <Gem className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">No items yet. Open mystery boxes to build your inventory!</p>
                 </div>
-              ))}
+              ) : (
+                <div className="text-center py-8">
+                  <Gem className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">Database integration coming soon!</p>
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -303,29 +312,17 @@ export default function DashboardPage() {
               Recent Orders
             </h3>
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {userData.recentOrders.map((order) => (
-                <div key={order.id} className="p-4 rounded-lg border border-gray-700">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="font-semibold text-white">{order.boxThemeName}</div>
-                    <div className="text-purple-400 font-bold">${order.totalAmount}</div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-400">
-                      {order.createdAt.toLocaleDateString()}
-                    </div>
-                    <div className={`text-xs px-2 py-1 rounded-full ${
-                      order.status === 'DELIVERED' ? 'bg-green-900/50 text-green-400' :
-                      order.status === 'PROCESSING' ? 'bg-yellow-900/50 text-yellow-400' :
-                      'bg-gray-900/50 text-gray-400'
-                    }`}>
-                      {order.status}
-                    </div>
-                  </div>
-                  <div className="text-sm text-gray-400 mt-2">
-                    Items: {order.rolledItems.join(', ')}
-                  </div>
+              {mockLoyaltyPoints === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">No orders yet. Start your collection today!</p>
                 </div>
-              ))}
+              ) : (
+                <div className="text-center py-8">
+                  <Package className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                  <p className="text-gray-400">Database integration coming soon!</p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

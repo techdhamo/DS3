@@ -56,13 +56,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<RollRespo
 
     // Import PrismaClient dynamically
     const { PrismaClient } = await import('@prisma/client');
-    const { PrismaPg } = await import('@prisma/adapter-pg');
-    const { Pool } = await import('pg');
     
-    // Initialize database connection
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    const adapter = new PrismaPg(pool);
-    const prisma = new PrismaClient({ adapter });
+    // Initialize PrismaClient without adapter for now
+    const prisma = new PrismaClient();
 
     try {
       // Use a transaction to ensure atomicity
@@ -245,7 +241,6 @@ export async function POST(request: NextRequest): Promise<NextResponse<RollRespo
 
     } finally {
       await prisma.$disconnect();
-      await pool.end();
     }
 
   } catch (error) {

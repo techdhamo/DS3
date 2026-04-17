@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sword, Package, Star, Users, Filter, Sparkles, TrendingUp, Clock, Shield } from 'lucide-react';
+import { Sword, Package, Star, Users, Filter, Sparkles, TrendingUp, Clock, Shield, CreditCard, TestTube } from 'lucide-react';
 import Link from 'next/link';
 import { RazorpayCheckout } from '../../src/components/razorpay/razorpay-checkout';
 
@@ -327,6 +327,70 @@ export default function StorePage() {
             </motion.div>
           ))}
         </div>
+      </div>
+
+      {/* Test Card Information Section */}
+      <div className="container mx-auto px-4 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="bg-gradient-to-br from-green-900/20 to-slate-900/50 border border-green-500/30 rounded-2xl p-8"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <TestTube className="w-6 h-6 text-green-400" />
+            <h2 className="text-2xl font-bold text-white">Test Mode - Payment Testing</h2>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-lg font-semibold text-green-400 mb-4 flex items-center gap-2">
+                <CreditCard className="w-5 h-5" />
+                Valid Test Cards
+              </h3>
+              <div className="space-y-3">
+                <div className="bg-black/50 p-4 rounded-lg border border-green-500/30">
+                  <div className="font-mono text-green-300 mb-1">Card Number: 4111 1111 1111 1111</div>
+                  <div className="text-sm text-gray-400">✅ This card should work for international testing</div>
+                </div>
+                <div className="bg-black/50 p-4 rounded-lg border border-blue-500/30">
+                  <div className="font-mono text-blue-300 mb-1">Card Number: 4000 0000 0000 0002</div>
+                  <div className="text-sm text-gray-400">✅ Alternative test card</div>
+                </div>
+                <div className="bg-black/50 p-4 rounded-lg border border-purple-500/30">
+                  <div className="font-mono text-purple-300 mb-1">Card Number: 5200 0000 0000 0007</div>
+                  <div className="text-sm text-gray-400">✅ Mastercard test card</div>
+                </div>
+                <div className="bg-black/50 p-4 rounded-lg border border-orange-500/30">
+                  <div className="font-mono text-orange-300 mb-1">Card Number: 4851 1111 1111 1114</div>
+                  <div className="text-sm text-gray-400">🇮🇳 Domestic Visa - Best for Indian testing</div>
+                </div>
+                <div className="bg-black/50 p-4 rounded-lg border border-yellow-500/30">
+                  <div className="font-mono text-yellow-300 mb-1">Card Number: 5176 5236 5462 4604</div>
+                  <div className="text-sm text-gray-400">🇮🇳 Domestic Mastercard - Indian testing</div>
+                </div>
+                <div className="bg-black/50 p-4 rounded-lg border border-red-500/30">
+                  <div className="font-mono text-red-300 mb-1">Card Number: 6011 1111 1111 1117</div>
+                  <div className="text-sm text-gray-400">🇮🇳 Domestic Maestro - Indian debit card</div>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold text-green-400 mb-4">Test Details</h3>
+              <div className="space-y-2 text-gray-300">
+                <p><span className="text-green-400">Expiry:</span> Any future date (e.g., 12/25)</p>
+                <p><span className="text-green-400">CVV:</span> Any 3 digits (e.g., 123)</p>
+                <p><span className="text-green-400">OTP:</span> 123456 (when prompted)</p>
+                <p><span className="text-orange-400">🇮🇳 Recommended:</span> Use domestic cards (4851, 5176, 6011) for Indian transactions</p>
+                <p className="text-sm text-gray-400 mt-4">
+                  Domestic Indian cards (🇮🇳) work best for Razorpay India testing. 
+                  If international cards fail, try the domestic Visa card starting with 4851.
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

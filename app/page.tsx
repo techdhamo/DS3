@@ -65,6 +65,23 @@ export default function Home() {
           </motion.p>
         </motion.div>
 
+        {/* DS3 Store Integration Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
+          className="mb-8"
+        >
+          <Link href="/store">
+            <div className="glass-dark rounded-xl px-6 py-3 border border-neon-purple-500/30 flex items-center gap-3 hover:border-neon-purple-400/50 transition-all cursor-pointer">
+              <Package className="w-5 h-5 text-neon-purple-400" />
+              <span className="text-midnight-200">Visit DS3 Store:</span>
+              <span className="text-neon-purple-300 font-semibold">ds3.world/store</span>
+              <span className="text-midnight-400 text-sm">(also accessible via ds3.store)</span>
+            </div>
+          </Link>
+        </motion.div>
+
         {/* Dual CTA Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -74,28 +91,28 @@ export default function Home() {
         >
           {/* DS3 World Portal */}
           <motion.a
-            href="/store"
+            href="/dashboard"
             className="group relative w-full md:w-1/2"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="glass-dark rounded-2xl p-8 border border-neon-purple-500/30 portal-glow hover:border-neon-purple-400/50 transition-all duration-300">
+            <div className="glass-dark rounded-2xl p-8 border border-neon-teal-500/30 portal-glow hover:border-neon-teal-400/50 transition-all duration-300">
               <div className="flex flex-col items-center text-center">
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                   className="mb-4"
                 >
-                  <Package className="w-12 h-12 text-neon-purple-400" />
+                  <Users className="w-12 h-12 text-neon-teal-400" />
                 </motion.div>
-                <h2 className="font-heading text-2xl font-bold mb-3 text-neon-purple-300 text-glow">
-                  Mystery Boxes
+                <h2 className="font-heading text-2xl font-bold mb-3 text-neon-teal-300 text-glow">
+                  DS3 World
                 </h2>
                 <p className="text-midnight-300 mb-6">
-                  Discover rare artifacts, magical items, and legendary treasures in our exclusive mystery box collections.
+                  Join the community, explore dungeons, trade items, and connect with fellow adventurers.
                 </p>
-                <div className="flex items-center gap-2 text-neon-purple-400 group-hover:text-neon-purple-300 transition-colors">
-                  <span className="font-semibold">Browse Store</span>
+                <div className="flex items-center gap-2 text-neon-teal-400 group-hover:text-neon-teal-300 transition-colors">
+                  <span className="font-semibold">Enter World</span>
                   <motion.div
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
@@ -114,23 +131,23 @@ export default function Home() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="glass-dark rounded-2xl p-8 border border-neon-teal-500/30 portal-glow hover:border-neon-teal-400/50 transition-all duration-300">
+            <div className="glass-dark rounded-2xl p-8 border border-violet-500/30 portal-glow hover:border-violet-400/50 transition-all duration-300">
               <div className="flex flex-col items-center text-center">
                 <motion.div
                   animate={{ rotate: -360 }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                   className="mb-4"
                 >
-                  <Package className="w-12 h-12 text-neon-teal-400" />
+                  <Package className="w-12 h-12 text-violet-400" />
                 </motion.div>
-                <h2 className="font-heading text-2xl font-bold mb-3 text-neon-teal-300 text-glow-teal">
-                  Shop DS3 Store
+                <h2 className="font-heading text-2xl font-bold mb-3 text-violet-300 text-glow">
+                  DS3 Store
                 </h2>
                 <p className="text-midnight-300 mb-6">
-                  Discover curated mystery boxes filled with fantasy treasures and magical artifacts.
+                  Shop mystery boxes, night lamps, self-care items & more. Available at ds3.world/store or ds3.store
                 </p>
-                <div className="flex items-center gap-2 text-neon-teal-400 group-hover:text-neon-teal-300 transition-colors">
-                  <span className="font-semibold">Browse Collection</span>
+                <div className="flex items-center gap-2 text-violet-400 group-hover:text-violet-300 transition-colors">
+                  <span className="font-semibold">Start Shopping</span>
                   <motion.div
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}

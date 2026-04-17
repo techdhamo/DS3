@@ -26,7 +26,7 @@ export async function GET(): Promise<NextResponse<{ success: boolean; rooms?: an
   try {
     return NextResponse.json({
       success: true,
-      rooms: mockRooms.filter(room => room.status !== 'completed')
+      rooms: mockRooms.filter(room => room.status === 'waiting')
     });
 
   } catch (error) {
