@@ -1,0 +1,65 @@
+# Coderabbit.ai Configuration for DS3
+# https://coderabbit.ai
+
+language: en
+
+early_access: false
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: true
+  review_status: true
+  collapse_walkthrough: false
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/.next/**"
+    - "!**/dist/**"
+    - "!**/target/**"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+  path_instructions:
+    - path: "app/**/*.tsx"
+      instructions: "Review React components for:
+        - TypeScript type safety
+        - Proper error handling
+        - Accessibility (ARIA labels)
+        - Performance optimizations (useMemo, useCallback)
+        - Follow Next.js App Router best practices"
+    - path: "app/**/*.ts"
+      instructions: "Review TypeScript code for:
+        - Strict type definitions
+        - Proper async/await usage
+        - Error handling patterns
+        - API route security"
+    - path: "mobile-app/**/*.tsx"
+      instructions: "Review React Native code for:
+        - Platform-specific considerations
+        - Performance on mobile devices
+        - Proper navigation usage
+        - Memory leak prevention"
+    - path: "ds3-dropshipping-service/**/*.java"
+      instructions: "Review Java Spring Boot code for:
+        - SOLID principles adherence
+        - Proper dependency injection
+        - Transaction management
+        - Security best practices
+        - REST API design patterns"
+  auto_review:
+    enabled: true
+    ignore_title_keywords:
+      - "WIP"
+      - "DRAFT"
+    drafts: false
+    base_branches:
+      - "main"
+      - "develop"
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: "auto"
