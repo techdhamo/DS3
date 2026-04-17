@@ -599,7 +599,7 @@ export default function IconicStore() {
                     </div>
                   ))}
                 </div>
-              ))}
+              )}
             </AnimatePresence>
 
             {filteredProducts.length === 0 && (
