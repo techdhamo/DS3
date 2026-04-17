@@ -1,0 +1,422 @@
+{
+  "settings": {
+    "number_of_shards": 3,
+    "number_of_replicas": 1,
+    "max_result_window": 50000,
+    "analysis": {
+      "char_filter": {
+        "replace_special_chars": {
+          "type": "mapping",
+          "mappings": [
+            "₹ => rupee",
+            "& => and"
+          ]
+        }
+      },
+      "filter": {
+        "english_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        },
+        "english_stemmer": {
+          "type": "stemmer",
+          "language": "english"
+        },
+        "english_possessive_stemmer": {
+          "type": "stemmer",
+          "language": "possessive_english"
+        },
+        "synonym_filter": {
+          "type": "synonym_graph",
+          "synonyms": [
+            "mobile, phone, smartphone, cell, cellular, handset",
+            "laptop, notebook, computer, pc",
+            "earbuds, earphones, headphones, headset, airpods",
+            "tv, television, telly, tele",
+            "refrigerator, fridge, freezer",
+            "washing machine, washer, laundry machine",
+            "ac, air conditioner, aircon, cooling",
+            "power bank, charger, battery pack, portable charger",
+            "watch, wristwatch, timepiece, smartwatch",
+            "shoes, footwear, sneakers, kicks",
+            "bag, handbag, purse, tote, backpack",
+            "dress, gown, frock, outfit",
+            "shirt, top, blouse, tee, t-shirt",
+            "pants, trousers, jeans, bottoms",
+            "jewelry, jewellery, accessories, ornaments",
+            "gift, present, giveaway, token",
+            "discount, offer, deal, sale, promotion"
+          ]
+        },
+        "indian_spellings": {
+          "type": "synonym",
+          "synonyms": [
+            "colour => color",
+            "favourite => favorite",
+            "catalogue => catalog"
+          ]
+        }
+      },
+      "analyzer": {
+        "product_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "char_filter": [
+            "html_strip",
+            "replace_special_chars"
+          ],
+          "filter": [
+            "english_possessive_stemmer",
+            "lowercase",
+            "indian_spellings",
+            "synonym_filter",
+            "english_stop",
+            "english_stemmer"
+          ]
+        },
+        "search_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "synonym_filter",
+            "english_stop"
+          ]
+        },
+        "keyword_analyzer": {
+          "type": "custom",
+          "tokenizer": "keyword",
+          "filter": [
+            "lowercase"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "tenant_id": {
+        "type": "keyword"
+      },
+      "id": {
+        "type": "keyword"
+      },
+      "sku": {
+        "type": "keyword",
+        "fields": {
+          "text": {
+            "type": "text",
+            "analyzer": "keyword_analyzer"
+          }
+        }
+      },
+      "slug": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "product_analyzer",
+        "search_analyzer": "search_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          },
+          "suggest": {
+            "type": "completion",
+            "analyzer": "simple"
+          },
+          "sort": {
+            "type": "keyword",
+            "normalizer": "lowercase"
+          }
+        }
+      },
+      "description": {
+        "type": "text",
+        "analyzer": "product_analyzer"
+      },
+      "short_description": {
+        "type": "text",
+        "analyzer": "product_analyzer"
+      },
+      "brand": {
+        "type": "keyword",
+        "fields": {
+          "text": {
+            "type": "text",
+            "analyzer": "keyword_analyzer"
+          }
+        }
+      },
+      "category": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "keyword",
+            "fields": {
+              "text": {
+                "type": "text"
+              }
+            }
+          },
+          "slug": {
+            "type": "keyword"
+          },
+          "parent_id": {
+            "type": "keyword"
+          },
+          "path": {
+            "type": "keyword"
+          }
+        }
+      },
+      "tags": {
+        "type": "keyword"
+      },
+      "attributes": {
+        "type": "nested",
+        "properties": {
+          "name": {
+            "type": "keyword"
+          },
+          "value": {
+            "type": "keyword",
+            "fields": {
+              "text": {
+                "type": "text"
+              }
+            }
+          },
+          "type": {
+            "type": "keyword"
+          }
+        }
+      },
+      "specifications": {
+        "type": "object",
+        "properties": {
+          "weight_grams": {
+            "type": "integer"
+          },
+          "dimensions": {
+            "type": "object",
+            "properties": {
+              "length": { "type": "float" },
+              "width": { "type": "float" },
+              "height": { "type": "float" }
+            }
+          }
+        }
+      },
+      "vendors": {
+        "type": "nested",
+        "properties": {
+          "id": {
+            "type": "keyword"
+          },
+          "code": {
+            "type": "keyword"
+          },
+          "name": {
+            "type": "keyword"
+          },
+          "sku": {
+            "type": "keyword"
+          },
+          "price": {
+            "type": "float"
+          },
+          "compare_at_price": {
+            "type": "float"
+          },
+          "stock": {
+            "type": "integer"
+          },
+          "available_stock": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "keyword"
+          },
+          "is_verified": {
+            "type": "boolean"
+          },
+          "quality_score": {
+            "type": "float"
+          },
+          "pricing_tiers": {
+            "type": "nested",
+            "properties": {
+              "tier_type": {
+                "type": "keyword"
+              },
+              "moq": {
+                "type": "integer"
+              },
+              "price": {
+                "type": "float"
+              },
+              "currency": {
+                "type": "keyword"
+              },
+              "customer_tags": {
+                "type": "keyword"
+              }
+            }
+          },
+          "shipping_cost": {
+            "type": "float"
+          },
+          "last_sync_at": {
+            "type": "date"
+          }
+        }
+      },
+      "pricing_summary": {
+        "type": "object",
+        "properties": {
+          "min_price": {
+            "type": "float"
+          },
+          "max_price": {
+            "type": "float"
+          },
+          "avg_price": {
+            "type": "float"
+          },
+          "compare_at_price": {
+            "type": "float"
+          },
+          "currency": {
+            "type": "keyword"
+          },
+          "savings_percent": {
+            "type": "float"
+          }
+        }
+      },
+      "inventory": {
+        "type": "object",
+        "properties": {
+          "total_stock": {
+            "type": "integer"
+          },
+          "available_stock": {
+            "type": "integer"
+          },
+          "low_stock_threshold": {
+            "type": "integer"
+          },
+          "is_low_stock": {
+            "type": "boolean"
+          },
+          "vendor_count": {
+            "type": "integer"
+          },
+          "active_vendor_count": {
+            "type": "integer"
+          },
+          "is_available": {
+            "type": "boolean"
+          },
+          "is_single_vendor": {
+            "type": "boolean"
+          }
+        }
+      },
+      "media": {
+        "type": "nested",
+        "properties": {
+          "url": {
+            "type": "keyword"
+          },
+          "type": {
+            "type": "keyword"
+          },
+          "alt_text": {
+            "type": "text"
+          },
+          "is_primary": {
+            "type": "boolean"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "primary_image": {
+        "type": "keyword"
+      },
+      "status": {
+        "type": "keyword"
+      },
+      "search_metadata": {
+        "type": "object",
+        "properties": {
+          "popularity_score": {
+            "type": "float"
+          },
+          "click_through_rate": {
+            "type": "float"
+          },
+          "conversion_rate": {
+            "type": "float"
+          },
+          "view_count": {
+            "type": "integer"
+          },
+          "order_count": {
+            "type": "integer"
+          }
+        }
+      },
+      "seo": {
+        "type": "object",
+        "properties": {
+          "meta_title": {
+            "type": "text"
+          },
+          "meta_description": {
+            "type": "text"
+          },
+          "keywords": {
+            "type": "keyword"
+          }
+        }
+      },
+      "created_at": {
+        "type": "date"
+      },
+      "updated_at": {
+        "type": "date"
+      },
+      "is_bundle": {
+        "type": "boolean"
+      },
+      "bundle_info": {
+        "type": "object",
+        "properties": {
+          "bundle_id": {
+            "type": "keyword"
+          },
+          "bundle_type": {
+            "type": "keyword"
+          },
+          "item_count": {
+            "type": "integer"
+          },
+          "savings_amount": {
+            "type": "float"
+          },
+          "savings_percent": {
+            "type": "float"
+          }
+        }
+      }
+    }
+  }
+}
