@@ -6,7 +6,9 @@ import com.ds3.identity.model.Profile;
 import com.ds3.identity.repository.MasterAccountRepository;
 import com.ds3.identity.repository.ProfileRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ public class MasterAccountService {
     private final ProfileRepository profileRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     
+    @Auditable(action = "create", resourceType = "master_account")
     @Transactional
     public MasterAccount createAccount(String email, String password, String displayName) {
         // Check if email already exists
@@ -61,6 +64,7 @@ public class MasterAccountService {
             .orElseThrow(() -> new RuntimeException("Account not found"));
     }
     
+    @Auditable(action = "update", resourceType = "master_account")
     @Transactional
     public MasterAccount updateAccount(UUID id, String displayName, String phone) {
         MasterAccount account = getAccount(id);
@@ -76,6 +80,7 @@ public class MasterAccountService {
         return masterAccountRepository.save(account);
     }
     
+    @Auditable(action = "delete", resourceType = "master_account")
     @Transactional
     public void deleteAccount(UUID id) {
         MasterAccount account = getAccount(id);

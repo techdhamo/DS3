@@ -39,6 +39,7 @@ public class ProfileService {
         return profile;
     }
     
+    @Auditable(action = "create", resourceType = "profile")
     @Transactional
     public Profile createProfile(UUID masterAccountId, String name, String relationship, 
                                   PrivacySettings privacySettings) {
@@ -63,9 +64,10 @@ public class ProfileService {
         return profileRepository.save(profile);
     }
     
+    @Auditable(action = "update", resourceType = "profile")
     @Transactional
     public Profile updateProfile(UUID profileId, UUID masterAccountId, String name, 
-                                  PrivacySettings privacySettings) {
+                                  String relationship, PrivacySettings privacySettings) {
         Profile profile = profileRepository.findActiveById(profileId)
             .orElseThrow(() -> new RuntimeException("Profile not found"));
         
@@ -82,6 +84,10 @@ public class ProfileService {
             profile.setName(name);
         }
         
+        if (relationship != null) {
+            profile.setRelationship(relationship);
+        }
+        
         if (privacySettings != null) {
             profile.setPrivacySettings(privacySettings);
         }
@@ -89,6 +95,7 @@ public class ProfileService {
         return profileRepository.save(profile);
     }
     
+    @Auditable(action = "delete", resourceType = "profile")
     @Transactional
     public void deleteProfile(UUID profileId, UUID masterAccountId) {
         Profile profile = profileRepository.findActiveById(profileId)
@@ -109,6 +116,7 @@ public class ProfileService {
         profileRepository.save(profile);
     }
     
+    @Auditable(action = "update", resourceType = "profile")
     @Transactional
     public Profile setPrimaryProfile(UUID profileId, UUID masterAccountId) {
         // Unset current primary

@@ -47,6 +47,11 @@ aws:
   kms:
     key-id: ${KMS_KEY_ID:alias/ds3-identity-encryption}
 
+# Encryption Configuration
+encryption:
+  key: ${ENCRYPTION_KEY:}
+  enabled: ${ENCRYPTION_ENABLED:true}
+
 # Logging
 logging:
   level:
