@@ -1,0 +1,12 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: coupon-engine
+
+logging:
+  level:
+    com.ds3.coupon: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
