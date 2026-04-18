@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ds3/matching-engine/internal/harmony"
 	"github.com/ds3/matching-engine/internal/similarity"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ func RegisterRoutes(router *gin.Engine) {
 	{
 		v1.POST("/recommendations", getRecommendations)
 		v1.POST("/group-harmony", getGroupHarmony)
+		v1.POST("/group-harmony/optimize", optimizeGroupHarmony)
 		v1.GET("/similar-products/:productId", getSimilarProducts)
 		v1.POST("/feedback", submitFeedback)
 		v1.GET("/analytics/profile/:profileId", getProfileAnalytics)
@@ -57,15 +59,62 @@ func getGroupHarmony(c *gin.Context) {
 		return
 	}
 
-	// Call group matching
-	results, err := similarity.FindGroupMatches(c.Request.Context(), req.ProfileIDs, req.Occasion, req.Category)
-	if err != nil {
-		log.Printf("getGroupHarmony error: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+	// Convert request to ProfileOutfit
+	profiles := make([]harmony.ProfileOutfit, len(req.Profiles))
+	for i, p := range req.Profiles {
+		profiles[i] = harmony.ProfileOutfit{
+			ProfileID:      p.ProfileID,
+			PrimaryColor:   harmony.Color{R: p.PrimaryColor.R, G: p.PrimaryColor.G, B: p.PrimaryColor.B},
+			SecondaryColor: harmony.Color{R: p.SecondaryColor.R, G: p.SecondaryColor.G, B: p.SecondaryColor.B},
+			Undertone:      p.Undertone,
+		}
+	}
+
+	result := harmony.CalculateGroupMatch(profiles)
+
+	c.JSON(http.StatusOK, GroupHarmonyResponse{
+		HarmonyScore:    result.HarmonyScore,
+		UndertoneMatch:  result.UndertoneMatch,
+		Recommendations: result.Recommendations,
+	})
+}
+
+func optimizeGroupHarmony(c *gin.Context) {
+	var req GroupHarmonyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, results)
+	// Convert request to ProfileOutfit
+	profiles := make([]harmony.ProfileOutfit, len(req.Profiles))
+	for i, p := range req.Profiles {
+		profiles[i] = harmony.ProfileOutfit{
+			ProfileID:      p.ProfileID,
+			PrimaryColor:   harmony.Color{R: p.PrimaryColor.R, G: p.PrimaryColor.G, B: p.PrimaryColor.B},
+			SecondaryColor: harmony.Color{R: p.SecondaryColor.R, G: p.SecondaryColor.G, B: p.SecondaryColor.B},
+			Undertone:      p.Undertone,
+		}
+	}
+
+	// Optimize with target harmony of 0.85
+	optimized := harmony.OptimizeGroupOutfit(profiles, 0.85)
+
+	// Convert back to response format
+	optimizedProfiles := make([]ProfileOutfitDTO, len(optimized))
+	for i, p := range optimized {
+		optimizedProfiles[i] = ProfileOutfitDTO{
+			ProfileID:      p.ProfileID,
+			PrimaryColor:   RGBColor{R: p.PrimaryColor.R, G: p.PrimaryColor.G, B: p.PrimaryColor.B},
+			SecondaryColor: RGBColor{R: p.SecondaryColor.R, G: p.SecondaryColor.G, B: p.SecondaryColor.B},
+			Undertone:      p.Undertone,
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"optimized_profiles": optimizedProfiles,
+		"target_harmony":     0.85,
+	})
 }
 
 func getSimilarProducts(c *gin.Context) {
@@ -184,8 +233,19 @@ type FeedbackRequest struct {
 	FeedbackComment string `json:"feedbackComment"`
 }
 
+type RGBColor struct {
+	R float64 `json:"r"`
+	G float64 `json:"g"`
+	B float64 `json:"b"`
+}
+
+type ProfileOutfitDTO struct {
+	ProfileID      string   `json:"profileId"`
+	PrimaryColor   RGBColor `json:"primaryColor"`
+	SecondaryColor RGBColor `json:"secondaryColor"`
+	Undertone      string   `json:"undertone"`
+}
+
 type GroupHarmonyRequest struct {
-	ProfileIDs []string `json:"profileIds" binding:"required"`
-	Occasion   string   `json:"occasion"`
-	Category   string   `json:"category"`
+	Profiles []ProfileOutfitDTO `json:"profiles" binding:"required"`
 }
