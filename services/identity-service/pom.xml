@@ -84,6 +84,13 @@
             <scope>runtime</scope>
         </dependency>
         
+        <!-- SendGrid for email notifications -->
+        <dependency>
+            <groupId>com.sendgrid</groupId>
+            <artifactId>sendgrid-java</artifactId>
+            <version>4.10.1</version>
+        </dependency>
+        
         <!-- Kafka -->
         <dependency>
             <groupId>org.springframework.kafka</groupId>

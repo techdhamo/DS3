@@ -23,6 +23,7 @@ public class DelegatedLinkService {
     private final DelegatedLinkRepository delegatedLinkRepository;
     private final MasterAccountRepository masterAccountRepository;
     private final ProfileRepository profileRepository;
+    private final NotificationService notificationService;
     
     @Transactional
     public DelegatedLink createInvitation(UUID ownerId, UUID profileId, String inviteeEmail, 
@@ -61,7 +62,12 @@ public class DelegatedLinkService {
             .invitationMessage(message)
             .build();
         
-        return delegatedLinkRepository.save(link);
+        DelegatedLink savedLink = delegatedLinkRepository.save(link);
+        
+        // Send notification
+        notificationService.sendInvitationEmail(savedLink, inviteeEmail, message);
+        
+        return savedLink;
     }
     
     @Transactional
@@ -86,7 +92,40 @@ public class DelegatedLinkService {
         link.setStatus("accepted");
         link.setAcceptedAt(LocalDateTime.now());
         
-        return delegatedLinkRepository.save(link);
+        DelegatedLink savedLink = delegatedLinkRepository.save(link);
+        
+        // Send notification to owner
+        notificationService.sendInvitationAcceptedEmail(savedLink);
+        
+        return savedLink;
+    }
+    
+    @Transactional
+    public void rejectInvitation(String token, UUID inviteeId) {
+        DelegatedLink link = delegatedLinkRepository.findByInvitationToken(token)
+            .orElseThrow(() -> new RuntimeException("Invalid invitation token"));
+        
+        if (!"pending".equals(link.getStatus())) {
+            throw new RuntimeException("Invitation is no longer valid");
+        }
+        
+        if (link.isExpired()) {
+            link.setStatus("expired");
+            delegatedLinkRepository.save(link);
+            throw new RuntimeException("Invitation has expired");
+        }
+        
+        if (!link.getDelegatorAccount().getId().equals(inviteeId)) {
+            throw new RuntimeException("This invitation is not for you");
+        }
+        
+        link.setStatus("rejected");
+        link.setRejectedAt(LocalDateTime.now());
+        
+        DelegatedLink savedLink = delegatedLinkRepository.save(link);
+        
+        // Send notification to owner
+        notificationService.sendInvitationRejectedEmail(savedLink);
     }
     
     @Transactional

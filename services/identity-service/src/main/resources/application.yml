@@ -52,6 +52,16 @@ encryption:
   key: ${ENCRYPTION_KEY:}
   enabled: ${ENCRYPTION_ENABLED:true}
 
+# SendGrid Configuration
+sendgrid:
+  api:
+    key: ${SENDGRID_API_KEY:}
+
+# App Configuration
+app:
+  base:
+    url: ${APP_BASE_URL:http://localhost:3000}
+
 # Logging
 logging:
   level:

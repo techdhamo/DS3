@@ -66,10 +66,25 @@ public class DelegatedLinkController {
     @PostMapping("/accept/{token}")
     public ResponseEntity<DelegatedLinkResponse> acceptInvitation(
             @PathVariable String token,
-            @RequestHeader("X-Master-Account-Id") UUID inviteeId) {
+            Authentication authentication) {
         
-        DelegatedLink link = delegatedLinkService.acceptInvitation(token, inviteeId);
+        UUID accountId = (UUID) authentication.getPrincipal();
+        
+        DelegatedLink link = delegatedLinkService.acceptInvitation(token, accountId);
+        
         return ResponseEntity.ok(toResponse(link));
+    }
+    
+    @PostMapping("/reject/{token}")
+    public ResponseEntity<Void> rejectInvitation(
+            @PathVariable String token,
+            Authentication authentication) {
+        
+        UUID accountId = (UUID) authentication.getPrincipal();
+        
+        delegatedLinkService.rejectInvitation(token, accountId);
+        
+        return ResponseEntity.noContent().build();
     }
     
     @PostMapping("/{id}/revoke")
@@ -88,6 +103,39 @@ public class DelegatedLinkController {
         
         DelegatedLink link = delegatedLinkService.getLink(id, userId);
         return ResponseEntity.ok(toResponse(link));
+    }
+    
+    @GetMapping("/permissions/options")
+    public ResponseEntity<PermissionOptionsResponse> getPermissionOptions() {
+        PermissionOptionsResponse options = PermissionOptionsResponse.builder()
+            .viewSize(PermissionOption.builder()
+                .key("canViewSize")
+                .label("View Size Measurements")
+                .description("Allow viewing body measurements and sizing data")
+                .build())
+            .viewStyle(PermissionOption.builder()
+                .key("canViewStyle")
+                .label("View Style Preferences")
+                .description("Allow viewing style preferences and fashion choices")
+                .build())
+            .orderFor(PermissionOption.builder()
+                .key("canOrderFor")
+                .label("Order Items for This Profile")
+                .description("Allow placing orders on behalf of this profile")
+                .build())
+            .viewBiometrics(PermissionOption.builder()
+                .key("canViewBiometrics")
+                .label("View Biometric Attributes")
+                .description("Allow viewing detailed biometric analysis")
+                .build())
+            .viewAvatar(PermissionOption.builder()
+                .key("canViewAvatar")
+                .label("View 3D Avatar")
+                .description("Allow viewing the 3D avatar representation")
+                .build())
+            .build();
+        
+        return ResponseEntity.ok(options);
     }
     
     @Transactional(readOnly = true)
@@ -131,5 +179,23 @@ public class DelegatedLinkController {
         private java.time.LocalDateTime invitationExpiresAt;
         private Integer accessCount;
         private java.time.LocalDateTime createdAt;
+    }
+    
+    @Data
+    @lombok.Builder
+    public static class PermissionOption {
+        private String key;
+        private String label;
+        private String description;
+    }
+    
+    @Data
+    @lombok.Builder
+    public static class PermissionOptionsResponse {
+        private PermissionOption viewSize;
+        private PermissionOption viewStyle;
+        private PermissionOption orderFor;
+        private PermissionOption viewBiometrics;
+        private PermissionOption viewAvatar;
     }
 }
