@@ -4,6 +4,7 @@ Combines 1000+ features into 1000-dimensional identity vector
 """
 
 import uuid
+from datetime import datetime
 from typing import Dict, List, Optional
 import structlog
 
@@ -51,44 +52,43 @@ class VectorGenerator:
         try:
             logger.info("vector.generation.started", profile_id=str(profile_id))
             
-            # Fetch all attributes
+            # Use single database session for entire operation
             async with get_db_session() as session:
+                # Fetch all attributes
                 result = await session.execute(
                     select(BiometricAttribute).where(
                         BiometricAttribute.profile_id == profile_id
                     )
                 )
                 attributes = result.scalars().all()
-            
-            if not attributes:
-                raise ValueError("No attributes found for profile")
-            
-            # Generate segment vectors
-            facial_vector = self._generate_facial_segment(attributes)
-            skin_vector = self._generate_skin_segment(attributes)
-            body_vector = self._generate_body_segment(attributes)
-            style_vector = self._generate_style_segment(attributes)
-            accessory_vector = self._generate_accessory_segment(attributes)
-            cosmetic_vector = self._generate_cosmetic_segment(attributes)
-            behavioral_vector = self._generate_behavioral_segment(attributes)
-            
-            # Concatenate into full vector
-            full_vector = np.concatenate([
-                facial_vector,
-                skin_vector,
-                body_vector,
-                style_vector,
-                accessory_vector,
-                cosmetic_vector,
-                behavioral_vector
-            ])
-            
-            # Normalize to unit length (for cosine similarity)
-            full_vector = full_vector / (np.linalg.norm(full_vector) + 1e-8)
-            
-            # Store in database
-            async with get_db_session() as session:
-                # Check if vector exists
+                
+                if not attributes:
+                    raise ValueError("No attributes found for profile")
+                
+                # Generate segment vectors
+                facial_vector = self._generate_facial_segment(attributes)
+                skin_vector = self._generate_skin_segment(attributes)
+                body_vector = self._generate_body_segment(attributes)
+                style_vector = self._generate_style_segment(attributes, profile_id)
+                accessory_vector = self._generate_accessory_segment(attributes)
+                cosmetic_vector = self._generate_cosmetic_segment(attributes)
+                behavioral_vector = self._generate_behavioral_segment(attributes)
+                
+                # Concatenate into full vector
+                full_vector = np.concatenate([
+                    facial_vector,
+                    skin_vector,
+                    body_vector,
+                    style_vector,
+                    accessory_vector,
+                    cosmetic_vector,
+                    behavioral_vector
+                ])
+                
+                # Normalize to unit length (for cosine similarity)
+                full_vector = full_vector / (np.linalg.norm(full_vector) + 1e-8)
+                
+                # Store in database - Check if vector exists
                 result = await session.execute(
                     select(IdentityVector).where(
                         IdentityVector.profile_id == profile_id
@@ -278,12 +278,17 @@ class VectorGenerator:
         
         return vector
     
-    def _generate_style_segment(self, attributes: List[BiometricAttribute]) -> np.ndarray:
+    def _generate_style_segment(self, attributes: List[BiometricAttribute], profile_id: uuid.UUID = None) -> np.ndarray:
         """Generate 256-dim style vector (learned)"""
-        # For now, random initialization
+        # For now, random initialization with profile-based seed
         # In production, this comes from CLIP model
-        np.random.seed(42)  # For reproducibility
-        return np.random.randn(self.SEGMENTS["style"]) * 0.1
+        if profile_id:
+            # Use profile_id as seed for reproducibility per profile
+            seed = int(profile_id.hex[:8], 16) % (2**32)
+            np.random.seed(seed)
+        style_vector = np.random.randn(self.SEGMENTS["style"]) * 0.1
+        np.random.seed(None)  # Reset to avoid affecting other code
+        return style_vector
     
     def _generate_accessory_segment(self, attributes: List[BiometricAttribute]) -> np.ndarray:
         """Generate 128-dim accessory fit vector"""
@@ -318,4 +323,3 @@ class VectorGenerator:
         # Initialize with zeros, filled by recommendation engine
         return np.zeros(self.SEGMENTS["behavioral"])
 
-from datetime import datetime

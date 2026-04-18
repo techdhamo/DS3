@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -17,7 +19,10 @@ import (
 
 func main() {
 	// Load configuration
-	config := loadConfig()
+	config, err := loadConfig()
+	if err != nil {
+		log.Fatalf("Configuration error: %v", err)
+	}
 
 	// Initialize database
 	if err := database.Init(config.DatabaseURL); err != nil {
@@ -50,8 +55,11 @@ func main() {
 
 	// Start server
 	srv := &http.Server{
-		Addr:    ":" + config.Port,
-		Handler: router,
+		Addr:         ":" + config.Port,
+		Handler:      router,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
 	// Graceful shutdown
@@ -80,10 +88,27 @@ func main() {
 }
 
 func corsMiddleware() gin.HandlerFunc {
+	allowedOriginsEnv := getEnv("ALLOWED_ORIGINS", "")
+	allowedOrigins := map[string]bool{}
+	if allowedOriginsEnv != "" {
+		for _, o := range strings.Split(allowedOriginsEnv, ",") {
+			if trimmed := strings.TrimSpace(o); trimmed != "" {
+				allowedOrigins[trimmed] = true
+			}
+		}
+	}
+
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		origin := c.Request.Header.Get("Origin")
+		if origin != "" && allowedOrigins[origin] {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			c.Writer.Header().Set("Vary", "Origin")
+		} else if origin != "" {
+			c.AbortWithStatus(http.StatusForbidden)
+			return
+		}
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
@@ -94,12 +119,16 @@ func corsMiddleware() gin.HandlerFunc {
 	}
 }
 
-func loadConfig() *Config {
-	return &Config{
+func loadConfig() (*Config, error) {
+	cfg := &Config{
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		Port:        getEnv("PORT", "8082"),
 		Environment: getEnv("ENVIRONMENT", "development"),
 	}
+	if cfg.DatabaseURL == "" && cfg.Environment != "development" {
+		return nil, fmt.Errorf("DATABASE_URL is required in %s environment", cfg.Environment)
+	}
+	return cfg, nil
 }
 
 func getEnv(key, defaultValue string) string {

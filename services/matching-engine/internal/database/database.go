@@ -11,7 +11,7 @@ var pool *pgxpool.Pool
 
 func Init(databaseURL string) error {
 	if databaseURL == "" {
-		databaseURL = "postgresql://ds3:password@localhost:5432/ds3_identity"
+		return fmt.Errorf("DATABASE_URL must be provided via environment variable or configuration")
 	}
 
 	config, err := pgxpool.ParseConfig(databaseURL)

@@ -1,10 +1,12 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/ds3/matching-engine/internal/similarity"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 func RegisterRoutes(router *gin.Engine) {
@@ -23,10 +25,18 @@ func getRecommendations(c *gin.Context) {
 		return
 	}
 
+	// Normalise limit: default 10, cap at 100
+	if req.Limit <= 0 {
+		req.Limit = 10
+	} else if req.Limit > 100 {
+		req.Limit = 100
+	}
+
 	// Call similarity search
 	results, err := similarity.FindMatches(c.Request.Context(), req.ProfileID, req.Category, req.Limit, req.Filters)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("getRecommendations error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
@@ -47,7 +57,8 @@ func getGroupHarmony(c *gin.Context) {
 	// Call group matching
 	results, err := similarity.FindGroupMatches(c.Request.Context(), req.ProfileIDs, req.Occasion, req.Category)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("getGroupHarmony error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
@@ -56,10 +67,19 @@ func getGroupHarmony(c *gin.Context) {
 
 func getSimilarProducts(c *gin.Context) {
 	productID := c.Param("productId")
+	if productID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid productId"})
+		return
+	}
+	if _, err := uuid.Parse(productID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid productId"})
+		return
+	}
 
 	results, err := similarity.FindSimilarProducts(c.Request.Context(), productID, 10)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		log.Printf("getSimilarProducts error: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 

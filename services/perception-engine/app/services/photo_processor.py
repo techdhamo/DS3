@@ -112,7 +112,7 @@ class PhotoProcessor:
             
         except Exception as e:
             logger.error("photo.process_failed", error=str(e))
-            raise
+            raise e
     
     def _validate_image(self, content: bytes, filename: str) -> None:
         """Validate image format and size"""
@@ -126,7 +126,7 @@ class PhotoProcessor:
             if img.format not in ['JPEG', 'PNG', 'WEBP']:
                 raise ValueError(f"Unsupported format: {img.format}")
         except Exception as e:
-            raise ValueError(f"Invalid image: {str(e)}")
+            raise ValueError(f"Invalid image: {e}") from e
         
         logger.debug("image.validated", format=img.format, size=len(content))
     

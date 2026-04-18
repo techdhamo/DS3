@@ -4,11 +4,31 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import Column, String, DateTime, Integer, Float, Boolean, ForeignKey, Text, JSON
+from sqlalchemy import Column, String, DateTime, Integer, Float, Boolean, ForeignKey, Text, JSON, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import declarative_base, relationship
 
 Base = declarative_base()
+
+class Profile(Base):
+    """Profile model for relationship references"""
+    __tablename__ = "profiles"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.UUID("00000000-0000-0000-0000-000000000000"))
+    master_account_id = Column(UUID(as_uuid=True), nullable=False)
+    name = Column(String(100), nullable=False)
+    relationship = Column(String(20), nullable=False, default="self")
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    deleted_at = Column(DateTime)
+    
+    # Relationships
+    photos = relationship("ProfilePhoto", back_populates="profile")
+    attributes = relationship("BiometricAttribute", back_populates="profile")
+    vectors = relationship("IdentityVector", back_populates="profile")
+    avatars = relationship("AvatarAsset", back_populates="profile")
 
 class ProfilePhoto(Base):
     """Encrypted photo storage with processing status"""
@@ -55,7 +75,7 @@ class ProfilePhoto(Base):
     ip_address = Column(String(50))
     user_agent = Column(Text)
     
-    profile = relationship("Profile", back_populates="photos")
+    profile = relationship("Profile", back_populates="photos", foreign_keys=[profile_id])
 
 class BiometricAttribute(Base):
     """Extracted 1000+ biometric attributes"""
@@ -64,6 +84,10 @@ class BiometricAttribute(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     tenant_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.UUID("00000000-0000-0000-0000-000000000000"))
     profile_id = Column(UUID(as_uuid=True), ForeignKey("profiles.id"), nullable=False)
+    
+    # Relationships
+    profile = relationship("Profile", back_populates="attributes", foreign_keys=[profile_id])
+    photo = relationship("ProfilePhoto", foreign_keys=[extracted_from_photo_id])
     
     # Attribute details
     category = Column(String(50), nullable=False)  # facial_geometry, skin_tone, body_metrics, etc.
@@ -96,7 +120,7 @@ class BiometricAttribute(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     __table_args__ = (
-        # Unique constraint per profile + attribute name
+        UniqueConstraint('profile_id', 'attribute_name', name='uq_profile_attribute_name'),
         {'schema': 'public'}
     )
 
@@ -124,6 +148,9 @@ class IdentityVector(Base):
     model_version = Column(String(20))
     generated_at = Column(DateTime, default=datetime.utcnow)
     last_synced_at = Column(DateTime)
+    
+    # Relationships
+    profile = relationship("Profile", back_populates="vectors", foreign_keys=[profile_id])
 
 class AvatarAsset(Base):
     """3D avatar models"""
@@ -157,3 +184,6 @@ class AvatarAsset(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    profile = relationship("Profile", back_populates="avatars", foreign_keys=[profile_id])

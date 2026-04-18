@@ -3,7 +3,9 @@ Feature Extractor Service
 Uses MediaPipe, ResNet, CLIP to extract 1000+ biometric attributes
 """
 
+import io
 import uuid
+from datetime import datetime
 from typing import Dict, List, Optional
 import structlog
 
@@ -184,7 +186,7 @@ class FeatureExtractor:
             elif image.shape[2] == 4:
                 image_rgb = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
             elif image.shape[2] == 3:
-                image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) if image.shape[2] == 3 else image
+                image_rgb = image  # PIL images are already RGB, don't convert
             else:
                 image_rgb = image
             

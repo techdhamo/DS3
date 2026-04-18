@@ -1,7 +1,8 @@
 """Configuration for Perception Engine"""
 
 from functools import lru_cache
-from pydantic_settings import BaseSettings
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     """Application settings"""
@@ -10,8 +11,8 @@ class Settings(BaseSettings):
     app_name: str = "DS3 Perception Engine"
     debug: bool = False
     
-    # Database
-    database_url: str = "postgresql://ds3:password@localhost:5432/ds3_identity"
+    # Database - must be provided via environment variable
+    database_url: str = Field(default="postgresql://localhost:5432/ds3_identity", validate_default=True)
     
     # AWS
     aws_region: str = "ap-south-1"
@@ -47,9 +48,11 @@ class Settings(BaseSettings):
     min_confidence_score: float = 0.5
     high_confidence_threshold: float = 0.9
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        validate_assignment=True
+    )
 
 @lru_cache()
 def get_settings() -> Settings:
