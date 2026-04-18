@@ -11,23 +11,23 @@ import (
 
 const (
 	// Weight for different factors in multi-objective scoring
-	WeightStyle    = 0.30
-	WeightColor    = 0.25
-	WeightFit      = 0.25
-	WeightPrice    = 0.10
+	WeightStyle      = 0.30
+	WeightColor      = 0.25
+	WeightFit        = 0.25
+	WeightPrice      = 0.10
 	WeightPopularity = 0.10
 )
 
 // Match represents a product match result
 type Match struct {
-	ProductID      string   `json:"productId"`
-	ProductName    string   `json:"productName"`
-	MatchScore     float64  `json:"matchScore"`
-	MatchReasons   []Reason `json:"matchReasons"`
-	Price          float64  `json:"price"`
-	ImageURL       string   `json:"imageUrl"`
-	VendorID       string   `json:"vendorId"`
-	InStock        bool     `json:"inStock"`
+	ProductID    string   `json:"productId"`
+	ProductName  string   `json:"productName"`
+	MatchScore   float64  `json:"matchScore"`
+	MatchReasons []Reason `json:"matchReasons"`
+	Price        float64  `json:"price"`
+	ImageURL     string   `json:"imageUrl"`
+	VendorID     string   `json:"vendorId"`
+	InStock      bool     `json:"inStock"`
 }
 
 // Reason explains why a product matched
@@ -45,10 +45,10 @@ func FindMatches(ctx context.Context, profileID, category string, limit int, fil
 
 	pool := database.GetPool()
 
-	// Get profile vector
+	// Get profile vector using pgvector
 	var profileVector []float64
 	err := pool.QueryRow(ctx, `
-		SELECT vector_json 
+		SELECT embedding::text::float[]
 		FROM identity_vectors 
 		WHERE profile_id = $1
 	`, profileID).Scan(&profileVector)
@@ -60,10 +60,10 @@ func FindMatches(ctx context.Context, profileID, category string, limit int, fil
 	// Get candidate products (with optional category filter)
 	var query string
 	var args []interface{}
-	
+
 	if category != "" {
 		query = `
-			SELECT id, global_product_id, vector_json, base_price, stock_quantity, status
+			SELECT id, global_product_id, embedding::text::float[], base_price, stock_quantity, status
 			FROM vendor_offers 
 			WHERE status = 'active' AND stock_quantity > 0
 			AND global_product_id IN (
@@ -75,7 +75,7 @@ func FindMatches(ctx context.Context, profileID, category string, limit int, fil
 		args = []interface{}{category}
 	} else {
 		query = `
-			SELECT id, global_product_id, vector_json, base_price, stock_quantity, status
+			SELECT id, global_product_id, embedding::text::float[], base_price, stock_quantity, status
 			FROM vendor_offers 
 			WHERE status = 'active' AND stock_quantity > 0
 		`
@@ -89,7 +89,7 @@ func FindMatches(ctx context.Context, profileID, category string, limit int, fil
 	defer rows.Close()
 
 	var candidates []Match
-	
+
 	for rows.Next() {
 		var offerID, productID string
 		var productVector []float64
@@ -112,8 +112,8 @@ func FindMatches(ctx context.Context, profileID, category string, limit int, fil
 		// Multi-objective scoring (simplified)
 		styleScore := similarity
 		colorScore := similarity * 0.9 // Placeholder
-		fitScore := 0.8 // Placeholder based on size match
-		priceScore := 0.7 // Placeholder based on price range
+		fitScore := 0.8                // Placeholder based on size match
+		priceScore := 0.7              // Placeholder based on price range
 
 		totalScore := styleScore*WeightStyle +
 			colorScore*WeightColor +
@@ -151,13 +151,13 @@ func FindMatches(ctx context.Context, profileID, category string, limit int, fil
 func FindGroupMatches(ctx context.Context, profileIDs []string, occasion, category string) (map[string]interface{}, error) {
 	// Get all profile vectors
 	profileVectors := make(map[string][]float64)
-	
+
 	for _, pid := range profileIDs {
 		var vector []float64
 		err := database.GetPool().QueryRow(ctx, `
-			SELECT vector_json FROM identity_vectors WHERE profile_id = $1
+			SELECT embedding::text::float[] FROM identity_vectors WHERE profile_id = $1
 		`, pid).Scan(&vector)
-		
+
 		if err != nil {
 			continue
 		}
@@ -178,9 +178,9 @@ func FindGroupMatches(ctx context.Context, profileIDs []string, occasion, catego
 	harmonyScore := calculateHarmonyScore(profileVectors, profileMatches)
 
 	return map[string]interface{}{
-		"profileIds":    profileIDs,
-		"occasion":      occasion,
-		"harmonyScore":  harmonyScore,
+		"profileIds":      profileIDs,
+		"occasion":        occasion,
+		"harmonyScore":    harmonyScore,
 		"recommendations": profileMatches,
 	}, nil
 }
@@ -190,7 +190,7 @@ func FindSimilarProducts(ctx context.Context, productID string, limit int) ([]Ma
 	// Get the product vector
 	var sourceVector []float64
 	err := database.GetPool().QueryRow(ctx, `
-		SELECT vector_json FROM product_vectors WHERE global_product_id = $1
+		SELECT embedding::text::float[] FROM product_vectors WHERE product_id = $1
 	`, productID).Scan(&sourceVector)
 
 	if err != nil {
@@ -199,11 +199,11 @@ func FindSimilarProducts(ctx context.Context, productID string, limit int) ([]Ma
 
 	// Find similar products
 	rows, err := database.GetPool().Query(ctx, `
-		SELECT global_product_id, vector_json, base_price
-		FROM vendor_offers
-		WHERE global_product_id != $1 AND status = 'active' AND stock_quantity > 0
+		SELECT product_id, embedding::text::float[], base_price
+		FROM product_vectors
+		WHERE product_id != $1
 	`, productID)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -214,13 +214,13 @@ func FindSimilarProducts(ctx context.Context, productID string, limit int) ([]Ma
 		var pid string
 		var vector []float64
 		var price float64
-		
+
 		if err := rows.Scan(&pid, &vector, &price); err != nil {
 			continue
 		}
-		
+
 		similarity := cosineSimilarity(sourceVector, vector)
-		
+
 		matches = append(matches, Match{
 			ProductID:  pid,
 			MatchScore: similarity,
@@ -247,7 +247,7 @@ func cosineSimilarity(a, b []float64) float64 {
 	}
 
 	var dotProduct, normA, normB float64
-	
+
 	for i := 0; i < len(a); i++ {
 		dotProduct += a[i] * b[i]
 		normA += a[i] * a[i]
