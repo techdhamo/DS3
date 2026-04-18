@@ -41,6 +41,12 @@ resilience4j:
         failure-rate-threshold: 50
         wait-duration-in-open-state: 10000
 
+# BaapStore API
+baapstore:
+  api:
+    url: ${BAAPSTORE_API_URL:https://api.baapstore.com}
+    key: ${BAAPSTORE_API_KEY}
+
 logging:
   level:
     com.ds3.integration: DEBUG
