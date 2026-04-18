@@ -8,6 +8,7 @@
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- For trigram search
+CREATE EXTENSION IF NOT EXISTS "vector"; -- pgvector for similarity search
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- CORE: CATEGORIES (Nested Hierarchy)
@@ -68,6 +69,7 @@ CREATE TABLE global_products (
     -- Search
     search_vector TSVECTOR,
     search_metadata JSONB DEFAULT '{}', -- popularity, click_rate, etc.
+    embedding vector(1536), -- For similarity search (OpenAI ada-002 dimension)
     
     -- Status
     status VARCHAR(20) DEFAULT 'active' 
@@ -93,6 +95,7 @@ CREATE INDEX idx_global_products_status ON global_products(status);
 CREATE INDEX idx_global_products_search ON global_products USING GIN(search_vector);
 CREATE INDEX idx_global_products_tags ON global_products USING GIN(tags);
 CREATE INDEX idx_global_products_created ON global_products(created_at DESC);
+CREATE INDEX idx_global_products_embedding ON global_products USING ivfflat(embedding vector_cosine_ops) WITH (lists = 100);
 
 -- Trigram index for fuzzy search
 CREATE INDEX idx_global_products_title_trgm ON global_products 
