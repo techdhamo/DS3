@@ -8,6 +8,7 @@
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto"; -- For encryption
+CREATE EXTENSION IF NOT EXISTS "vector"; -- pgvector for similarity search
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- CORE: MASTER ACCOUNTS
@@ -250,3 +251,23 @@ CREATE TABLE matching_history (
 CREATE INDEX idx_matching_history_profile ON matching_history(profile_id);
 CREATE INDEX idx_matching_history_product ON matching_history(product_id);
 CREATE INDEX idx_matching_history_created ON matching_history(created_at DESC);
+
+CREATE TABLE identity_vectors (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+    embedding vector(1000) NOT NULL,
+    vector_type VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_identity_vectors_embedding ON identity_vectors USING hnsw(embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
+
+CREATE TABLE product_vectors (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    product_id UUID NOT NULL,
+    embedding vector(1000) NOT NULL,
+    vector_type VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX idx_product_vectors_embedding ON product_vectors USING hnsw(embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);

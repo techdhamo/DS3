@@ -1,0 +1,47 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+		/* Begin PBXBuildFile section */
+		AppDelegateSwift /* AppDelegate.swift */ = {isa = PBXBuildFile; fileRef = AppDelegateSwiftRef /* AppDelegate.swift */; };
+		SceneDelegateSwift /* SceneDelegate.swift */ = {isa = PBXBuildFile; fileRef = SceneDelegateSwiftRef /* SceneDelegate.swift */; };
+		ViewControllerSwift /* ViewController.swift */ = {isa = PBXBuildFile; fileRef = ViewControllerSwiftRef /* ViewController.swift */; };
+		/* End PBXBuildFile section */
+		
+		/* Begin PBXFileReference section */
+		AppDelegateSwiftRef /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		SceneDelegateSwiftRef /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		ViewControllerSwiftRef /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		InfoPlist /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		/* End PBXFileReference section */
+		
+		/* Begin PBXGroup section */
+		mainGroup = {
+			isa = PBXGroup;
+			children = (
+				AppDelegateSwiftRef,
+				SceneDelegateSwiftRef,
+				ViewControllerSwiftRef,
+				InfoPlist,
+			);
+			sourceTree = "<group>";
+		};
+		/* End PBXGroup section */
+		
+		/* Begin PBXProject section */
+		project = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = buildConfigurations;
+			mainGroup = mainGroup;
+		};
+		/* End PBXProject section */
+	};
+	rootObject = project;
+}
