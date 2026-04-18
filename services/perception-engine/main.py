@@ -18,6 +18,7 @@ from app.config import Settings, get_settings
 from app.services.photo_processor import PhotoProcessor
 from app.services.feature_extractor import FeatureExtractor
 from app.services.vector_generator import VectorGenerator
+from app.services.avatar_generator import AvatarGenerator
 from app.db.database import init_db, close_db
 
 logger = structlog.get_logger()
@@ -53,6 +54,26 @@ class VectorResponse(BaseModel):
     vector_segments: dict
     generation_status: str
     similarity_ready: bool
+
+class AvatarGenerationRequest(BaseModel):
+    photo_id: uuid.UUID
+    gender: str = Field(default="neutral", pattern="^(male|female|neutral)$")
+    style: str = Field(default="fullbody", pattern="^(fullbody|head)$")
+
+class AvatarGenerationResponse(BaseModel):
+    avatar_code: str
+    source_photo_id: str
+    style: str
+    formats: dict
+    generated_at: str
+
+class AvatarCustomizationRequest(BaseModel):
+    avatar_code: str
+    body_type: Optional[str] = None
+    skin_tone: Optional[str] = None
+    hair_color: Optional[str] = None
+    hair_style: Optional[str] = None
+    accessories: Optional[list] = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -274,6 +295,97 @@ def _calculate_overall_status(photos, extraction, vector):
         return "extraction_pending"
     else:
         return "photos_pending"
+
+# Avatar Generation Endpoints
+@app.post("/v1/perception/profiles/{profile_id}/avatar/generate", response_model=AvatarGenerationResponse)
+async def generate_avatar(
+    profile_id: uuid.UUID,
+    request: AvatarGenerationRequest,
+    settings: Settings = Depends(get_settings)
+):
+    """Generate 3D avatar from profile photo"""
+    processor = PhotoProcessor(settings)
+    avatar_generator = AvatarGenerator(settings)
+    
+    try:
+        # Get photo details
+        photo_status = await processor.get_status(request.photo_id)
+        photo_url = photo_status.get("storage_url")
+        
+        if not photo_url:
+            raise HTTPException(status_code=400, detail="Photo not found or not processed")
+        
+        # Generate avatar
+        result = await avatar_generator.generate_avatar(
+            profile_id=profile_id,
+            photo_id=request.photo_id,
+            photo_url=photo_url,
+            gender=request.gender,
+            style=request.style
+        )
+        
+        logger.info("avatar.generated", profile_id=str(profile_id), avatar_code=result["avatar_code"])
+        
+        return AvatarGenerationResponse(**result)
+    
+    except Exception as e:
+        logger.error("avatar.generation_failed", profile_id=str(profile_id), error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await avatar_generator.close()
+
+@app.post("/v1/perception/avatars/{avatar_code}/customize")
+async def customize_avatar(
+    avatar_code: str,
+    request: AvatarCustomizationRequest,
+    settings: Settings = Depends(get_settings)
+):
+    """Customize existing avatar"""
+    avatar_generator = AvatarGenerator(settings)
+    
+    try:
+        customizations = {
+            "bodyType": request.body_type,
+            "skinTone": request.skin_tone,
+            "hairColor": request.hair_color,
+            "hairStyle": request.hair_style,
+            "accessories": request.accessories
+        }
+        # Remove None values
+        customizations = {k: v for k, v in customizations.items() if v is not None}
+        
+        result = await avatar_generator.customize_avatar(avatar_code, customizations)
+        
+        logger.info("avatar.customized", avatar_code=avatar_code)
+        
+        return result
+    
+    except Exception as e:
+        logger.error("avatar.customization_failed", avatar_code=avatar_code, error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await avatar_generator.close()
+
+@app.get("/v1/perception/avatars/{avatar_code}/preview")
+async def get_avatar_preview(
+    avatar_code: str,
+    format: str = Query(default="png", pattern="^(png|jpg)$"),
+    settings: Settings = Depends(get_settings)
+):
+    """Get preview image of avatar"""
+    avatar_generator = AvatarGenerator(settings)
+    
+    try:
+        preview_bytes = await avatar_generator.get_avatar_preview(avatar_code, format)
+        
+        from fastapi.responses import Response
+        return Response(content=preview_bytes, media_type=f"image/{format}")
+    
+    except Exception as e:
+        logger.error("avatar.preview_failed", avatar_code=avatar_code, error=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        await avatar_generator.close()
 
 if __name__ == "__main__":
     import uvicorn

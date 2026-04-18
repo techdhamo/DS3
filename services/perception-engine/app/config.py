@@ -14,12 +14,16 @@ class Settings(BaseSettings):
     # Database - must be provided via environment variable
     database_url: str = Field(default="postgresql://localhost:5432/ds3_identity", validate_default=True)
     
-    # AWS
-    aws_region: str = "ap-south-1"
-    s3_bucket: str = "ds3-identity-photos"
-    kms_key_id: str = "alias/ds3-identity-encryption"
+    # AWS Configuration
+    aws_region: str = Field(default="ap-south-1")
+    s3_bucket: str = Field(default="ds3-identity-photos")
+    kms_key_id: str = Field(default="alias/ds3-identity-encryption")
     
-    # Kafka
+    # ReadyPlayerMe Configuration
+    readyplayerme_api_key: str = Field(default="")
+    readyplayerme_api_base: str = Field(default="https://api.readyplayer.me/v1")
+    
+    # Kafka Configuration
     kafka_bootstrap_servers: str = "localhost:9092"
     kafka_topic_photo_uploaded: str = "photo.uploaded"
     kafka_topic_processing_complete: str = "processing.complete"
