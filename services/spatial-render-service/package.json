@@ -1,0 +1,44 @@
+{
+  "name": "ds3-spatial-render-service",
+  "version": "1.0.0",
+  "description": "WebXR/ARKit/ARCore service for AR visualization and avatar management",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "webxr",
+    "arkit",
+    "arcore",
+    "ar",
+    "vr",
+    "3d",
+    "avatar",
+    "threejs"
+  ],
+  "author": "techdhamo",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "three": "^0.160.0",
+    "@react-three/fiber": "^8.15.0",
+    "@react-three/drei": "^9.95.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "compression": "^1.7.4",
+    "dotenv": "^16.3.1",
+    "uuid": "^9.0.1",
+    "axios": "^1.6.5",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.33.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "jest": "^29.7.0",
+    "eslint": "^8.56.0"
+  }
+}
