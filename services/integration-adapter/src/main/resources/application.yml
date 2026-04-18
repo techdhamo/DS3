@@ -47,6 +47,12 @@ baapstore:
     url: ${BAAPSTORE_API_URL:https://api.baapstore.com}
     key: ${BAAPSTORE_API_KEY}
 
+# Factori API
+factori:
+  api:
+    url: ${FACTORI_API_URL:https://api.factori.com/graphql}
+    key: ${FACTORI_API_KEY}
+
 logging:
   level:
     com.ds3.integration: DEBUG
